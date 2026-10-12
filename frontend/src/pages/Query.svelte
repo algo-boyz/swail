@@ -18,6 +18,7 @@
 	let results = $state<QueryResultRow[]>([]);
 	let loading = $state(false);
 	let error = $state('');
+	let ran = $state(false);
 	let vqStatus = $state('checking…');
 
 	async function checkHealth() {
@@ -37,6 +38,7 @@
 	async function runQuery() {
 		loading = true;
 		error = '';
+		ran = true;
 		try {
 			const rows = await RunQuery({
 				tool: active,
@@ -45,9 +47,6 @@
 				limit: limit
 			});
 			results = rows ?? [];
-			if (results.length === 0) {
-				error = 'No hits in window (empty result is valid).';
-			}
 		} catch (e: any) {
 			error = e?.message ?? String(e);
 			results = [];
@@ -80,6 +79,7 @@
 					active = t.id;
 					results = [];
 					error = '';
+					ran = false;
 				}}
 			>
 				{t.label}
@@ -111,24 +111,34 @@
 	{/if}
 
 	<div class="results">
-		{#each results as r}
-			<div class="result-card">
-				<div class="result-top">
-					<strong>{r.title}</strong>
-					{#if r.confidence != null}
-						<span class="conf">{Math.round(r.confidence * 100)}%</span>
+		{#if loading}
+			<p class="empty">Loading…</p>
+		{:else}
+			{#each results as r}
+				<div class="result-card">
+					<div class="result-top">
+						<strong>{r.title}</strong>
+						{#if r.confidence != null}
+							<span class="conf">{Math.round(r.confidence * 100)}%</span>
+						{/if}
+					</div>
+					<p class="result-meta">{r.meta}</p>
+					{#if r.object_id}
+						<button class="linkish" onclick={() => push(`/evidence/${r.object_id}`)}
+							>Play evidence →</button
+						>
 					{/if}
 				</div>
-				<p class="result-meta">{r.meta}</p>
-				{#if r.object_id}
-					<button class="linkish" onclick={() => push(`/evidence/${r.object_id}`)}
-						>Play evidence →</button
-					>
-				{/if}
-			</div>
-		{:else if !loading && !error}
-			<p class="empty">Run a query against voice-query-service (DEMO_MODE=true works offline).</p>
-		{/each}
+			{:else}
+				<p class="empty">
+					{#if ran && !error}
+						No hits in this window.
+					{:else if !error}
+						Run a query against voice-query-service (DEMO_MODE=true works offline).
+					{/if}
+				</p>
+			{/each}
+		{/if}
 	</div>
 </div>
 
