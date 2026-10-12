@@ -44,8 +44,8 @@
 	<!-- Command bar -->
 	<header class="cmd-bar">
 		<div class="cmd-left">
-			<h1 class="title"><span class="title-accent">Cameras</span></h1>
-			<p class="subtitle">Sources registered with scene-gate / connector-camera</p>
+			<h1 class="page-title"><span class="title-accent">Cameras</span></h1>
+			<p class="page-sub">Sources registered with scene-gate / connector-camera</p>
 		</div>
 
 		<div class="cmd-stats" aria-live="polite">
@@ -85,7 +85,6 @@
 							<span class="cam-id">{c.id}</span>
 							<span class="status-pill" data-status={c.status}>{c.status}</span>
 						</div>
-						<!-- subtle scan / mesh placeholder until live frames arrive -->
 						<div class="preview-mesh" aria-hidden="true"></div>
 					</div>
 
@@ -100,13 +99,8 @@
 </div>
 
 <style>
-	/* Full-bleed relative to the narrow App container */
 	.cameras-page {
-		width: 100vw;
-		max-width: none;
-		margin-left: calc(-50vw + 50%);
-		padding: 0 max(1.5rem, env(safe-area-inset-right)) 2rem max(1.5rem, env(safe-area-inset-left));
-		box-sizing: border-box;
+		width: 100%;
 	}
 
 	/* ----- Command bar ---------------------------------------------------- */
@@ -115,23 +109,29 @@
 		flex-wrap: wrap;
 		align-items: flex-end;
 		justify-content: space-between;
-		gap: 1rem 2rem;
-		margin-bottom: 1.75rem;
+		gap: 0.75rem 1.5rem;
+		margin-bottom: 1.5rem;
 	}
 
-	.cmd-left .title {
-		margin-bottom: 0.35rem;
+	.page-title {
+		margin: 0 0 0.25rem;
+		font-size: clamp(1.75rem, 4vw, 2.35rem);
+		line-height: 1.1;
+		font-weight: 800;
+		letter-spacing: -0.02em;
 	}
 
-	.cmd-left .subtitle {
+	.page-sub {
 		margin: 0;
 		font-size: 0.95rem;
+		color: var(--muted);
+		max-width: 28rem;
 	}
 
 	.cmd-stats {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.6rem;
+		gap: 0.5rem;
 	}
 
 	.stat {
@@ -231,7 +231,6 @@
 		box-shadow: 0 0 0 1px rgba(255, 77, 77, 0.35);
 	}
 
-	/* Status glow on the whole card */
 	.cam-tile[data-status='online'] {
 		box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.12), 0 8px 28px rgba(34, 197, 94, 0.08);
 	}
@@ -249,7 +248,6 @@
 		filter: saturate(0.65);
 	}
 
-	/* Preview area */
 	.cam-preview {
 		position: relative;
 		height: 140px;
@@ -338,7 +336,6 @@
 		color: #f87171;
 	}
 
-	/* Meta */
 	.cam-meta {
 		padding: 12px 14px 14px;
 		display: flex;
@@ -364,15 +361,7 @@
 		margin-top: 1rem;
 	}
 
-	/* Mobile */
 	@media (max-width: 640px) {
-		.cameras-page {
-			margin-left: 0;
-			width: 100%;
-			padding-left: 0;
-			padding-right: 0;
-		}
-
 		.cam-grid {
 			grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
 			gap: 0.75rem;
