@@ -1,22 +1,23 @@
 <script lang="ts">
 	import { push } from 'svelte-spa-router';
+	import { _ } from '../lib/i18n';
 
-	const cards = [
-		{ path: '/query', title: 'Query', desc: 'Plates, objects, scenes, transcripts' },
-		{ path: '/cameras', title: 'Cameras', desc: 'Sources & live tiles' },
-		{ path: '/alerts', title: 'Alerts', desc: 'Recent detections & intents' },
-		{ path: '/evidence/demo', title: 'Evidence', desc: 'Presigned audio / video player' }
-	];
+	const cards = $derived([
+		{ path: '/query', title: $_('nav.query'), desc: $_('nav.query_desc') },
+		{ path: '/cameras', title: $_('nav.cameras'), desc: $_('nav.cameras_desc') },
+		{ path: '/alerts', title: $_('nav.alerts'), desc: $_('nav.alerts_desc') },
+		{ path: '/evidence/demo', title: $_('nav.evidence'), desc: $_('nav.evidence_desc') }
+	]);
 </script>
 
 <div class="home">
-	<span class="badge">scaffold · PR-1</span>
+	<span class="badge">{$_('home.badge')}</span>
 
 	<h1 class="title">
 		<span class="title-accent">AgentJetson</span>
 	</h1>
 	<p class="subtitle">
-		Intelligence at the edge of every encounter — voice query, evidence & awareness.
+		{$_('home.subtitle')}
 	</p>
 
 	<nav class="platforms" aria-label="Main sections">

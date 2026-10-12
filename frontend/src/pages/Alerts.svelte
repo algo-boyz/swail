@@ -3,6 +3,7 @@
 	import { push } from 'svelte-spa-router';
 	import { GetRecentAlerts } from '../../bindings/swail/ajservice';
 	import type { MockAlert } from '../../bindings/swail/ajservice';
+	import { _ } from '../lib/i18n';
 
 	let alerts = $state<MockAlert[]>([]);
 	let loading = $state(true);
@@ -24,13 +25,13 @@
 	onMount(load);
 </script>
 
-<button class="back-btn" onclick={() => push('/')}>← Back</button>
+<button class="back-btn" onclick={() => push('/')}>{$_('common.back')}</button>
 
 <div class="page-header">
-	<h1 class="title"><span class="title-accent">Alerts</span></h1>
+	<h1 class="title"><span class="title-accent">{$_('alerts.title')}</span></h1>
 	<p class="subtitle">
-		Detections from voice-query-service (falls back to mocks if offline).
-		<button class="linkish inline" onclick={load} disabled={loading}>Refresh</button>
+		{$_('alerts.subtitle')}
+		<button class="linkish inline" onclick={load} disabled={loading}>{$_('common.refresh')}</button>
 	</p>
 </div>
 
@@ -40,7 +41,7 @@
 
 <div class="alert-list">
 	{#if loading}
-		<p class="empty">Loading…</p>
+		<p class="empty">{$_('common.loading')}</p>
 	{:else}
 		{#each alerts as a}
 			<div class="alert-card" data-kind={a.kind}>
@@ -54,13 +55,13 @@
 					<span class="conf">{Math.round(a.confidence * 100)}%</span>
 					{#if a.object_id}
 						<button class="linkish" onclick={() => push(`/evidence/${a.object_id}`)}
-							>Evidence →</button
+							>{$_('alerts.evidence')}</button
 						>
 					{/if}
 				</div>
 			</div>
 		{:else}
-			<p class="empty">No alerts.</p>
+			<p class="empty">{$_('alerts.empty')}</p>
 		{/each}
 	{/if}
 </div>

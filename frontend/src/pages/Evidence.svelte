@@ -2,6 +2,7 @@
 	import { push } from 'svelte-spa-router';
 	import { GetEvidence } from '../../bindings/swail/ajservice';
 	import type { EvidenceMeta } from '../../bindings/swail/models';
+	import { _ } from '../lib/i18n';
 
 	let { params }: { params?: { id?: string } } = $props();
 	const id = $derived(params?.id ?? '');
@@ -13,9 +14,8 @@
 	async function load(objectId: string) {
 		if (!objectId || objectId === 'unknown' || objectId === 'demo') {
 			loading = false;
-			error = objectId === 'demo'
-				? 'Replace /evidence/demo with a real object_id from object-storage.'
-				: 'Missing object_id in route.';
+			error =
+				objectId === 'demo' ? $_('evidence.missing_demo') : $_('evidence.missing_id');
 			meta = null;
 			return;
 		}
@@ -45,19 +45,19 @@
 		return ct.startsWith('image/') || ct.includes('jpeg') || ct.includes('png') || ct.includes('jpg');
 	}
 	function formatBytes(n: number) {
-		if (!n) return '—';
+		if (!n) return '\u2014';
 		if (n < 1024) return `${n} B`;
 		if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
 		return `${(n / (1024 * 1024)).toFixed(1)} MB`;
 	}
 </script>
 
-<button class="back-btn" onclick={() => push('/')}>← Back</button>
+<button class="back-btn" onclick={() => push('/')}>{$_('common.back')}</button>
 
 <div class="page-header">
-	<h1 class="title"><span class="title-accent">Evidence</span></h1>
+	<h1 class="title"><span class="title-accent">{$_('evidence.title')}</span></h1>
 	<p class="subtitle">
-		object_id <code>{id || '—'}</code>
+		object_id <code>{id || '\u2014'}</code>
 		{#if meta}
 			<span class="mode-chip" data-mode={meta.mode}>{meta.mode}</span>
 		{/if}
@@ -66,50 +66,45 @@
 
 <div class="player-shell">
 	{#if loading}
-		<div class="player-placeholder"><span>Loading…</span></div>
+		<div class="player-placeholder"><span>{$_('common.loading')}</span></div>
 	{:else if error}
 		<div class="player-placeholder err-box">
 			<span>{error}</span>
-			<p class="hint">
-				Ensure object-storage is up (<code>DEMO_MODE=true go run ./cmd/server</code> on :8081)
-				and the id exists. Put a sample with
-				<code>POST /v1/objects?kind=camera_recording&source=cam-front</code>.
-			</p>
+			<p class="hint">{$_('evidence.hint')}</p>
 		</div>
 	{:else if meta}
 		{#if isVideo(meta.content_type)}
 			<!-- svelte-ignore a11y_media_has_caption -->
 			<video class="player" controls preload="metadata" src={meta.play_url}>
-				Your browser does not support video playback.
+				{$_('evidence.no_video')}
 			</video>
 		{:else if isAudio(meta.content_type)}
 			<audio class="player audio" controls preload="metadata" src={meta.play_url}>
-				Your browser does not support audio playback.
+				{$_('evidence.no_audio')}
 			</audio>
 		{:else if isImage(meta.content_type)}
 			<img class="player img" src={meta.play_url} alt="Evidence {meta.object_id}" />
 		{:else}
 			<div class="player-placeholder">
-				<span>Unsupported type: {meta.content_type || 'unknown'}</span>
-				<a class="dl" href={meta.play_url} target="_blank" rel="noopener">Open / download</a>
+				<span>{$_('evidence.unsupported', { type: meta.content_type || 'unknown' })}</span>
+				<a class="dl" href={meta.play_url} target="_blank" rel="noopener">{$_('evidence.open_download')}</a>
 			</div>
 		{/if}
 
 		<dl class="meta">
-			<div><dt>Kind</dt><dd>{meta.kind || '—'}</dd></div>
-			<div><dt>Source</dt><dd>{meta.source || '—'}</dd></div>
-			<div><dt>Type</dt><dd>{meta.content_type || '—'}</dd></div>
-			<div><dt>Size</dt><dd>{formatBytes(meta.size_bytes)}</dd></div>
-			<div><dt>Captured</dt><dd>{meta.timestamp || '—'}</dd></div>
-			<div><dt>Expires</dt><dd>{meta.expires_at || '—'}</dd></div>
+			<div><dt>{$_('evidence.kind')}</dt><dd>{meta.kind || '\u2014'}</dd></div>
+			<div><dt>{$_('evidence.source')}</dt><dd>{meta.source || '\u2014'}</dd></div>
+			<div><dt>{$_('evidence.type')}</dt><dd>{meta.content_type || '\u2014'}</dd></div>
+			<div><dt>{$_('evidence.size')}</dt><dd>{formatBytes(meta.size_bytes)}</dd></div>
+			<div><dt>{$_('evidence.captured')}</dt><dd>{meta.timestamp || '\u2014'}</dd></div>
+			<div><dt>{$_('evidence.expires')}</dt><dd>{meta.expires_at || '\u2014'}</dd></div>
 		</dl>
 
 		<p class="note">
-			Playback via <strong>{meta.mode}</strong>
 			{#if meta.mode === 'presign'}
-				(direct to object store — best for seeking).
+				{$_('evidence.playback_presign', { mode: meta.mode })}
 			{:else}
-				(Go proxy with Range support — used when presign is unavailable, e.g. filesystem DEMO).
+				{$_('evidence.playback_proxy', { mode: meta.mode })}
 			{/if}
 		</p>
 	{/if}
