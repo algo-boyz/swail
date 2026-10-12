@@ -25,7 +25,9 @@
 		</span>
 	</header>
 
-	<Router {routes} />
+	<div class="route-slot">
+		<Router {routes} />
+	</div>
 </main>
 
 <hr class="footer-divider" />
@@ -56,3 +58,22 @@
 		</svg>
 	</a>
 </footer>
+
+<style>
+	.route-slot {
+		flex: 1 1 auto;
+		min-height: 0;
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+	}
+
+	/* svelte-spa-router mounts the page as a direct child; stretch it */
+	.route-slot :global(> *) {
+		flex: 1 1 auto;
+		min-height: 0;
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+	}
+</style>
