@@ -1,62 +1,68 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { push } from 'svelte-spa-router';
+	import { GetRecentAlerts } from '../../bindings/swail/ajservice';
+	import type { MockAlert } from '../../bindings/swail/ajservice';
 
-	const alerts = [
-		{
-			id: 'a-001',
-			kind: 'plate',
-			camera: 'cam-front',
-			message: '7ABC123 · Mercedes C-Class',
-			confidence: 0.94,
-			ts: '14:22:01',
-			objectId: 'obj-rec-001'
-		},
-		{
-			id: 'a-002',
-			kind: 'scene',
-			camera: 'cam-rear',
-			message: 'roadway / driving',
-			confidence: 0.88,
-			ts: '14:21:44'
-		},
-		{
-			id: 'a-003',
-			kind: 'officer-down',
-			camera: 'body-3',
-			message: 'Possible officer-down (audio intent)',
-			confidence: 0.91,
-			ts: '14:18:12',
-			objectId: 'obj-aud-003'
+	let alerts = $state<MockAlert[]>([]);
+	let loading = $state(true);
+	let error = $state('');
+
+	async function load() {
+		loading = true;
+		error = '';
+		try {
+			alerts = (await GetRecentAlerts()) ?? [];
+		} catch (e: any) {
+			error = e?.message ?? String(e);
+			alerts = [];
+		} finally {
+			loading = false;
 		}
-	];
+	}
+
+	onMount(load);
 </script>
 
 <button class="back-btn" onclick={() => push('/')}>← Back</button>
 
 <div class="page-header">
 	<h1 class="title"><span class="title-accent">Alerts</span></h1>
-	<p class="subtitle">Recent detections & audio intents (mock · PR-2 will poll voice-query / NATS).</p>
+	<p class="subtitle">
+		Detections from voice-query-service (falls back to mocks if offline).
+		<button class="linkish inline" onclick={load} disabled={loading}>Refresh</button>
+	</p>
 </div>
 
+{#if error}
+	<p class="err">{error}</p>
+{/if}
+
 <div class="alert-list">
-	{#each alerts as a}
-		<div class="alert-card" data-kind={a.kind}>
-			<div class="alert-head">
-				<span class="kind-badge">{a.kind}</span>
-				<span class="ts">{a.ts}</span>
+	{#if loading}
+		<p class="empty">Loading…</p>
+	{:else}
+		{#each alerts as a}
+			<div class="alert-card" data-kind={a.kind}>
+				<div class="alert-head">
+					<span class="kind-badge">{a.kind}</span>
+					<span class="ts">{a.timestamp}</span>
+				</div>
+				<p class="msg">{a.message}</p>
+				<div class="alert-foot">
+					<span class="cam">{a.camera_id}</span>
+					<span class="conf">{Math.round(a.confidence * 100)}%</span>
+					{#if a.object_id}
+						<button class="linkish" onclick={() => push(`/evidence/${a.object_id}`)}
+							>Evidence →</button
+						>
+					{/if}
+				</div>
 			</div>
-			<p class="msg">{a.message}</p>
-			<div class="alert-foot">
-				<span class="cam">{a.camera}</span>
-				<span class="conf">{Math.round(a.confidence * 100)}%</span>
-				{#if a.objectId}
-					<button class="linkish" onclick={() => push(`/evidence/${a.objectId}`)}
-						>Evidence →</button
-					>
-				{/if}
-			</div>
-		</div>
-	{/each}
+		{:else}
+			<p class="empty">No alerts.</p>
+		{/each}
+	{/if}
 </div>
 
 <style>
@@ -77,7 +83,8 @@
 	.alert-card[data-kind='officer-down'] {
 		border-left-color: #ef4444;
 	}
-	.alert-card[data-kind='plate'] {
+	.alert-card[data-kind='plate'],
+	.alert-card[data-kind='detection'] {
 		border-left-color: #3b82f6;
 	}
 	.alert-card[data-kind='scene'] {
@@ -128,5 +135,17 @@
 		cursor: pointer;
 		padding: 0;
 		--wails-draggable: no-drag;
+	}
+	.linkish.inline {
+		margin-left: 10px;
+		font-size: 13px;
+	}
+	.empty {
+		color: var(--muted);
+		font-size: 14px;
+	}
+	.err {
+		color: #f87171;
+		font-size: 13px;
 	}
 </style>
