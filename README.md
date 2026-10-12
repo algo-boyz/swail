@@ -7,43 +7,56 @@ Built with [Wails v3](https://v3.wails.io/) + Svelte 5 + TypeScript.
 
 ## Status
 
-**PR-2** — Query console + alerts wired to `voice-query-service` over HTTP.
+**PR-5** — Evidence player streams media via object-storage presign (proxy fallback).
 
 | Route | Purpose |
 |-------|---------|
-| `/` | Live overview (cameras, alerts, health) |
-| `/query` | Query console → `POST /v1/query/{plates,objects,scenes,detections,transcripts}` |
+| `/` | Live overview |
+| `/query` | Query console → voice-query-service |
 | `/cameras` | Camera / source list (mock) |
-| `/alerts` | Alert feed from detections (mock fallback) |
-| `/evidence/:id` | Evidence player placeholder (presigned media in PR-5) |
+| `/alerts` | Alert feed from detections |
+| `/evidence/:id` | Media player (`presign` or `proxy`) |
 
 ## Dev
 
 ```bash
-# Terminal 1 — core voice-query-service (demo data, no ClickHouse)
-cd path/to/agentjetson/core/voice-query-service
-export DEMO_MODE=true
-go run ./cmd/server   # :8080
+# Terminal 1 — voice-query-service
+cd agentjetson/core/voice-query-service
+DEMO_MODE=true go run ./cmd/server   # :8080
 
-# Terminal 2 — dashboard
-cd path/to/swail
-export VOICE_QUERY_URL=http://localhost:8080   # optional; this is the default
-task dev   # or: wails3 dev
+# Terminal 2 — object-storage
+cd agentjetson/core/object-storage
+DEMO_MODE=true go run ./cmd/server   # :8081
+
+# Put a sample clip (optional)
+curl -s -X POST 'http://localhost:8081/v1/objects?kind=camera_recording&source=cam-front' \
+  -H 'Content-Type: video/mp4' --data-binary @sample.mp4 | jq
+# → note object_id / Meta.ObjectID
+
+# Terminal 3 — dashboard
+cd swail
+# optional overrides:
+# export VOICE_QUERY_URL=http://localhost:8080
+# export OBJECT_STORAGE_URL=http://localhost:8081
+task dev
 ```
+
+Open `/evidence/<object_id>` — player uses presigned URL when available, otherwise the Range-capable proxy path.
 
 ### Go bridge
 
-- `voice_client.go` — thin HTTP client (`GET /health`, `POST /v1/query/*`)
-- `aj_service.go` — `Health`, `Query`, `GetRecentAlerts`, `GetCameras`
-- Override base URL with `VOICE_QUERY_URL`
+| File | Role |
+|------|------|
+| `voice_client.go` | voice-query HTTP (`/health`, `/v1/query/*`) |
+| `storage_client.go` | object-storage HTTP (`/health`, meta, `/presign`) |
+| `aj_service.go` | `Health`, `Query`, `GetEvidence`, `GetRecentAlerts`, `GetCameras` |
 
-Frontend bindings use `Call.ByName('main.AJService.*')` (see `frontend/bindings/swail/ajservice.ts`).
-Optional: `wails3 generate bindings -ts -names` to refresh.
+Env: `VOICE_QUERY_URL`, `OBJECT_STORAGE_URL`.
 
 ## Roadmap
 
-1. ~~PR-1 — scaffold + placeholder UI~~
-2. ~~PR-2 — voice-query-service HTTP client + Query console~~
-3. **PR-3/4** — object-storage presign + CORS (core)
-4. **PR-5** — Evidence player with presigned URLs
+1. ~~PR-1 — scaffold~~
+2. ~~PR-2 — voice-query client~~
+3. ~~PR-3/4 — object-storage presign + CORS (core)~~
+4. ~~PR-5 — Evidence player~~
 5. Live alerts / NATS / packaging
