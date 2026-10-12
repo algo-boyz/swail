@@ -1,20 +1,12 @@
-export function FormatEUR(cents: number | null | undefined): string {
-    if (cents == null) return '—';
-    return new Intl.NumberFormat('nl-NL', {
-        style: 'currency',
-        currency: 'EUR'
-    }).format(cents / 100);
+/** Format a 0–1 confidence as percentage string. */
+export function FormatConfidence(c: number | null | undefined): string {
+	if (c == null) return '—';
+	return `${Math.round(c * 100)}%`;
 }
 
-export function FormatPct(ratio: number): string {
-    const pct = ratio * 100;
-    const sign = pct > 0 ? '+' : '';
-    return `${sign}${pct.toFixed(1)}%`;
-}
-
-export function ArbitrageClass(ratio: number): string {
-    if (ratio >= 0.1) return 'arb-great';
-    if (ratio >= 0.03) return 'arb-good';
-    if (ratio >= 0) return 'arb-ok';
-    return 'arb-bad';
+/** CSS class for confidence badge. */
+export function ConfidenceClass(c: number): string {
+	if (c >= 0.9) return 'conf-high';
+	if (c >= 0.7) return 'conf-mid';
+	return 'conf-low';
 }
