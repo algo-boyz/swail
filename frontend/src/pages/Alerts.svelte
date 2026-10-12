@@ -4,6 +4,7 @@
 	import { GetRecentAlerts } from '../../bindings/swail/ajservice';
 	import type { MockAlert } from '../../bindings/swail/ajservice';
 	import { _ } from '../lib/i18n';
+	import LangSwitcher from '../lib/LangSwitcher.svelte';
 
 	let alerts = $state<MockAlert[]>([]);
 	let loading = $state(true);
@@ -25,15 +26,22 @@
 	onMount(load);
 </script>
 
-<button class="back-btn" onclick={() => push('/')}>{$_('common.back')}</button>
-
-<div class="page-header">
-	<h1 class="title"><span class="title-accent">{$_('alerts.title')}</span></h1>
-	<p class="subtitle">
-		{$_('alerts.subtitle')}
-		<button class="linkish inline" onclick={load} disabled={loading}>{$_('common.refresh')}</button>
-	</p>
-</div>
+<header class="top-bar">
+	<div class="top-left">
+		<span class="brand-mark inline" data-wml-openURL="https://www.agentjetson.ai">
+			<img src="/wails.png" class="brand-logo" alt="AgentJetson" />
+		</span>
+		<button class="back-btn" onclick={() => push('/')}>{$_('common.back')}</button>
+		<div class="page-header compact">
+			<h1 class="title"><span class="title-accent">{$_('alerts.title')}</span></h1>
+			<p class="subtitle">
+				{$_('alerts.subtitle')}
+				<button class="linkish inline" onclick={load} disabled={loading}>{$_('common.refresh')}</button>
+			</p>
+		</div>
+	</div>
+	<LangSwitcher />
+</header>
 
 {#if error}
 	<p class="err">{error}</p>
@@ -67,6 +75,54 @@
 </div>
 
 <style>
+	.top-bar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+		margin-bottom: var(--s-3);
+		flex-shrink: 0;
+	}
+
+	.top-left {
+		display: flex;
+		align-items: center;
+		gap: 0.65rem;
+		min-width: 0;
+	}
+
+	.brand-mark.inline {
+		display: inline-flex;
+		align-items: center;
+		flex-shrink: 0;
+	}
+
+	.brand-mark.inline .brand-logo {
+		height: 36px;
+		width: auto;
+		display: block;
+		object-fit: contain;
+	}
+
+	.page-header.compact {
+		margin: 0;
+	}
+
+	.page-header.compact .title {
+		margin: 0;
+		font-size: clamp(1.35rem, 2.6vw, 1.7rem);
+	}
+
+	.page-header.compact .subtitle {
+		margin: 2px 0 0;
+		font-size: 13px;
+	}
+
+	.back-btn {
+		margin-bottom: 0;
+		flex-shrink: 0;
+	}
+
 	.alert-list {
 		display: flex;
 		flex-direction: column;

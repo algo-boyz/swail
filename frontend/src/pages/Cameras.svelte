@@ -4,6 +4,7 @@
 	import { GetCameras } from '../../bindings/swail/ajservice';
 	import type { MockCamera } from '../../bindings/swail/models';
 	import { _ } from '../lib/i18n';
+	import LangSwitcher from '../lib/LangSwitcher.svelte';
 
 	const fallback: MockCamera[] = [
 		{ id: 'cam-front', label: 'Dash front', status: 'online', scene: 'roadway' },
@@ -47,9 +48,12 @@
 </script>
 
 <div class="cameras-page">
-	<!-- Single-line Tesla-style command bar -->
+	<!-- Single-line Tesla-style command bar: logo → back → title → desc → stats → language -->
 	<header class="cmd-bar">
 		<div class="cmd-left">
+			<span class="brand-mark inline" data-wml-openURL="https://www.agentjetson.ai">
+				<img src="/wails.png" class="brand-logo" alt="AgentJetson" />
+			</span>
 			<button class="back-btn touch" onclick={() => push('/')} aria-label={$_('common.back')}>
 				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 					<polyline points="15 18 9 12 15 6"></polyline>
@@ -59,19 +63,22 @@
 			<span class="page-desc">{$_('cameras.desc')}</span>
 		</div>
 
-		<div class="cmd-stats" aria-live="polite">
-			<span class="stat" data-status="online">
-				<span class="stat-dot"></span>
-				{$_('cameras.online', { n: onlineCount })}
-			</span>
-			<span class="stat" data-status="degraded">
-				<span class="stat-dot"></span>
-				{$_('cameras.degraded', { n: degradedCount })}
-			</span>
-			<span class="stat" data-status="offline">
-				<span class="stat-dot"></span>
-				{$_('cameras.offline', { n: offlineCount })}
-			</span>
+		<div class="cmd-right">
+			<div class="cmd-stats" aria-live="polite">
+				<span class="stat" data-status="online">
+					<span class="stat-dot"></span>
+					{$_('cameras.online', { n: onlineCount })}
+				</span>
+				<span class="stat" data-status="degraded">
+					<span class="stat-dot"></span>
+					{$_('cameras.degraded', { n: degradedCount })}
+				</span>
+				<span class="stat" data-status="offline">
+					<span class="stat-dot"></span>
+					{$_('cameras.offline', { n: offlineCount })}
+				</span>
+			</div>
+			<LangSwitcher />
 		</div>
 	</header>
 
@@ -81,7 +88,6 @@
 		<p class="empty">{$_('cameras.empty')}</p>
 	{:else}
 		<div class="stage">
-			<!-- Vertical camera selector rail — equal-height slots fill the stage -->
 			<nav class="selector" aria-label="Camera selector" role="list">
 				{#each cameras as c (c.id)}
 					<button
@@ -105,13 +111,11 @@
 				{/each}
 			</nav>
 
-			<!-- Full-stage player (fills remaining width + height) -->
 			{#if selected}
 				<div class="player-wrap">
 					<div class="player" data-status={selected.status}>
 						<div class="preview-mesh" aria-hidden="true"></div>
 
-						<!-- Top overlay: specialists + connector -->
 						<div class="overlay-top">
 							<div class="chip-row">
 								<span class="chip">alpr</span>
@@ -121,7 +125,6 @@
 							</div>
 						</div>
 
-						<!-- Bottom overlay: identity + metrics -->
 						<div class="overlay-bottom">
 							<div class="player-oneliner">
 								<span class="player-id">{selected.id}</span>
@@ -145,18 +148,15 @@
 </div>
 
 <style>
-	/* Fill the app content column so stage can stretch to the footer */
 	.cameras-page {
 		width: 100%;
 		flex: 1 1 auto;
 		min-height: 0;
 		display: flex;
 		flex-direction: column;
-		/* Use remaining viewport under brand + footer */
 		height: 100%;
 	}
 
-	/* ----- Command bar ---------------------------------------------------- */
 	.cmd-bar {
 		display: flex;
 		align-items: center;
@@ -170,8 +170,28 @@
 	.cmd-left {
 		display: flex;
 		align-items: center;
-		gap: 0.75rem;
+		gap: 0.65rem;
 		min-width: 0;
+	}
+
+	.cmd-right {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		flex-shrink: 0;
+	}
+
+	.brand-mark.inline {
+		display: inline-flex;
+		align-items: center;
+		flex-shrink: 0;
+	}
+
+	.brand-mark.inline .brand-logo {
+		height: 36px;
+		width: auto;
+		display: block;
+		object-fit: contain;
 	}
 
 	.back-btn.touch {
@@ -281,7 +301,6 @@
 		margin-top: 0.75rem;
 	}
 
-	/* ----- Stage: selector rail + player (both stretch full height) ------- */
 	.stage {
 		flex: 1 1 auto;
 		display: flex;
@@ -292,7 +311,6 @@
 		overflow: hidden;
 	}
 
-	/* Vertical camera selector — N items share 100% height equally */
 	.selector {
 		flex: 0 0 180px;
 		width: 180px;
@@ -306,7 +324,6 @@
 	}
 
 	.sel-item {
-		/* Equal share of the rail height (4 cams → ~25% each) */
 		flex: 1 1 0;
 		min-height: 0;
 		display: flex;
@@ -338,7 +355,6 @@
 		box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.25), 0 6px 20px rgba(34, 197, 94, 0.12);
 	}
 
-	/* Preview grows to fill the item above the meta strip */
 	.sel-preview {
 		position: relative;
 		flex: 1 1 auto;
@@ -426,7 +442,6 @@
 		color: #f87171;
 	}
 
-	/* Player fills all remaining stage space (no aspect-ratio letterbox) */
 	.player-wrap {
 		flex: 1 1 auto;
 		min-width: 0;
@@ -459,7 +474,6 @@
 		opacity: 0.4;
 	}
 
-	/* Overlays */
 	.overlay-top {
 		position: absolute;
 		top: 0;
@@ -552,8 +566,17 @@
 		flex-shrink: 0;
 	}
 
-	/* ----- Narrow / mobile ------------------------------------------------ */
+	@media (max-width: 900px) {
+		.page-desc {
+			display: none;
+		}
+	}
+
 	@media (max-width: 720px) {
+		.cmd-bar {
+			flex-wrap: wrap;
+		}
+
 		.stage {
 			flex-direction: column;
 		}
@@ -577,10 +600,6 @@
 		.sel-preview {
 			flex: 1 1 auto;
 			min-height: 64px;
-		}
-
-		.page-desc {
-			display: none;
 		}
 
 		.player {
