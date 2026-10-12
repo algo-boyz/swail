@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { push } from 'svelte-spa-router';
+	import { Query as RunQuery, Health } from '../../bindings/swail/ajservice';
+	import type { QueryResultRow } from '../../bindings/swail/ajservice';
 
 	const tools = [
 		{ id: 'plates', label: 'Plates', hint: 'query_recent_plates · make_model, time_window' },
@@ -13,41 +15,59 @@
 	let windowSec = $state(30);
 	let limit = $state(5);
 	let filter = $state('');
-	let results = $state<
-		{ title: string; meta: string; confidence?: number; objectId?: string }[]
-	>([
-		{
-			title: '7ABC123',
-			meta: 'Mercedes C-Class · cam-front · track 77',
-			confidence: 0.94,
-			objectId: 'obj-rec-001'
-		},
-		{
-			title: '9XYZ456',
-			meta: 'VW Golf · cam-rear · track 12',
-			confidence: 0.87
-		}
-	]);
+	let results = $state<QueryResultRow[]>([]);
+	let loading = $state(false);
+	let error = $state('');
+	let vqStatus = $state('checking…');
 
-	function runQuery() {
-		// PR-2: call voice-query-service /v1/query/{active}
-		results = [
-			...
-			results,
-			{
-				title: `Mock ${active} · ${filter || 'any'}`,
-				meta: `window ${windowSec}s · limit ${limit}`,
-				confidence: 0.8
+	async function checkHealth() {
+		try {
+			const h = await Health();
+			const vq = h?.voice_query as Record<string, unknown> | undefined;
+			if (vq?.ok) {
+				vqStatus = vq.demo_mode ? 'voice-query · demo' : 'voice-query · live';
+			} else {
+				vqStatus = 'voice-query offline';
 			}
-		];
+		} catch {
+			vqStatus = 'bridge unavailable';
+		}
 	}
+
+	async function runQuery() {
+		loading = true;
+		error = '';
+		try {
+			const rows = await RunQuery({
+				tool: active,
+				filter: filter,
+				time_window_sec: windowSec,
+				limit: limit
+			});
+			results = rows ?? [];
+			if (results.length === 0) {
+				error = 'No hits in window (empty result is valid).';
+			}
+		} catch (e: any) {
+			error = e?.message ?? String(e);
+			results = [];
+		} finally {
+			loading = false;
+			checkHealth();
+		}
+	}
+
+	checkHealth();
 </script>
 
 <button class="back-btn" onclick={() => push('/')}>← Back</button>
 
 <div class="page-header">
 	<h1 class="title"><span class="title-accent">Query</span></h1>
-	<p class="subtitle">Maps 1:1 to voice-query-service HTTP / MCP tools (mock data for now).</p>
+	<p class="subtitle">
+		Proxied to voice-query-service <code>/v1/query/*</code>
+		<span class="status-chip">{vqStatus}</span>
+	</p>
 </div>
 
 <div class="query-layout">
@@ -56,7 +76,11 @@
 			<button
 				class="pill"
 				class:active={active === t.id}
-				onclick={() => (active = t.id)}
+				onclick={() => {
+					active = t.id;
+					results = [];
+					error = '';
+				}}
 			>
 				{t.label}
 			</button>
@@ -77,8 +101,14 @@
 			<span class="control-label">Limit</span>
 			<input class="input" type="number" bind:value={limit} min="1" max="50" />
 		</label>
-		<button class="btn" onclick={runQuery}>Run</button>
+		<button class="btn" onclick={runQuery} disabled={loading}>
+			{loading ? '…' : 'Run'}
+		</button>
 	</div>
+
+	{#if error}
+		<p class="err">{error}</p>
+	{/if}
 
 	<div class="results">
 		{#each results as r}
@@ -90,14 +120,14 @@
 					{/if}
 				</div>
 				<p class="result-meta">{r.meta}</p>
-				{#if r.objectId}
-					<button class="linkish" onclick={() => push(`/evidence/${r.objectId}`)}
+				{#if r.object_id}
+					<button class="linkish" onclick={() => push(`/evidence/${r.object_id}`)}
 						>Play evidence →</button
 					>
 				{/if}
 			</div>
-		{:else}
-			<p class="empty">No results yet.</p>
+		{:else if !loading && !error}
+			<p class="empty">Run a query against voice-query-service (DEMO_MODE=true works offline).</p>
 		{/each}
 	</div>
 </div>
@@ -106,6 +136,18 @@
 	.query-layout {
 		width: 100%;
 		max-width: 640px;
+	}
+	.status-chip {
+		margin-left: 8px;
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: #ff7a8f;
+		background: rgba(255, 45, 114, 0.14);
+		border: 1px solid rgba(255, 45, 114, 0.3);
+		border-radius: 999px;
+		padding: 2px 8px;
 	}
 	.tool-tabs {
 		display: flex;
@@ -170,6 +212,15 @@
 	.input:focus {
 		border-color: rgba(255, 77, 77, 0.55);
 	}
+	.btn:disabled {
+		opacity: 0.6;
+		cursor: wait;
+	}
+	.err {
+		color: #f87171;
+		font-size: 13px;
+		margin: 0 0 12px;
+	}
 	.results {
 		display: flex;
 		flex-direction: column;
@@ -210,5 +261,11 @@
 	.empty {
 		color: var(--muted);
 		font-size: 14px;
+	}
+	code {
+		font-size: 0.9em;
+		background: rgba(255, 255, 255, 0.06);
+		padding: 1px 5px;
+		border-radius: 4px;
 	}
 </style>
