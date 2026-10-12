@@ -80,7 +80,7 @@
 		<p class="empty">No cameras registered.</p>
 	{:else}
 		<div class="stage">
-			<!-- Vertical camera selector rail (always visible) -->
+			<!-- Vertical camera selector rail — equal-height slots fill the stage -->
 			<nav class="selector" aria-label="Camera selector" role="list">
 				{#each cameras as c (c.id)}
 					<button
@@ -104,7 +104,7 @@
 				{/each}
 			</nav>
 
-			<!-- 16:9 full-stage player -->
+			<!-- Full-stage player (fills remaining width + height) -->
 			{#if selected}
 				<div class="player-wrap">
 					<div class="player" data-status={selected.status}>
@@ -144,12 +144,15 @@
 </div>
 
 <style>
+	/* Fill the app content column so stage can stretch to the footer */
 	.cameras-page {
 		width: 100%;
+		flex: 1 1 auto;
 		min-height: 0;
-		flex: 1;
 		display: flex;
 		flex-direction: column;
+		/* Use remaining viewport under brand + footer */
+		height: 100%;
 	}
 
 	/* ----- Command bar ---------------------------------------------------- */
@@ -158,7 +161,7 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: 0.75rem 1.25rem;
-		margin-bottom: 0.85rem;
+		margin-bottom: 0.75rem;
 		min-height: 3rem;
 		flex-shrink: 0;
 	}
@@ -277,29 +280,34 @@
 		margin-top: 0.75rem;
 	}
 
-	/* ----- Stage: selector rail + 16:9 player ------------------------------ */
+	/* ----- Stage: selector rail + player (both stretch full height) ------- */
 	.stage {
-		flex: 1;
+		flex: 1 1 auto;
 		display: flex;
-		gap: 0.85rem;
+		gap: 0.75rem;
 		align-items: stretch;
 		width: 100%;
 		min-height: 0;
+		overflow: hidden;
 	}
 
-	/* Vertical camera selector */
+	/* Vertical camera selector — N items share 100% height equally */
 	.selector {
-		flex: 0 0 168px;
-		width: 168px;
+		flex: 0 0 180px;
+		width: 180px;
 		display: flex;
 		flex-direction: column;
-		gap: 0.55rem;
-		overflow-y: auto;
-		padding-right: 2px;
+		gap: 0.5rem;
+		min-height: 0;
+		height: 100%;
+		overflow: hidden;
 		--wails-draggable: no-drag;
 	}
 
 	.sel-item {
+		/* Equal share of the rail height (4 cams → ~25% each) */
+		flex: 1 1 0;
+		min-height: 0;
 		display: flex;
 		flex-direction: column;
 		padding: 0;
@@ -329,9 +337,11 @@
 		box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.25), 0 6px 20px rgba(34, 197, 94, 0.12);
 	}
 
+	/* Preview grows to fill the item above the meta strip */
 	.sel-preview {
 		position: relative;
-		height: 72px;
+		flex: 1 1 auto;
+		min-height: 0;
 		background: linear-gradient(155deg, #141722 0%, #0a0b12 70%);
 		overflow: hidden;
 	}
@@ -371,7 +381,8 @@
 	}
 
 	.sel-meta {
-		padding: 7px 9px 8px;
+		flex-shrink: 0;
+		padding: 6px 9px 7px;
 		display: flex;
 		flex-direction: column;
 		gap: 1px;
@@ -414,20 +425,20 @@
 		color: #f87171;
 	}
 
-	/* 16:9 player stage */
+	/* Player fills all remaining stage space (no aspect-ratio letterbox) */
 	.player-wrap {
 		flex: 1 1 auto;
 		min-width: 0;
+		min-height: 0;
+		height: 100%;
 		display: flex;
-		align-items: center;
-		justify-content: center;
 	}
 
 	.player {
 		position: relative;
+		flex: 1 1 auto;
 		width: 100%;
-		aspect-ratio: 16 / 9;
-		max-height: 100%;
+		height: 100%;
 		border-radius: 14px;
 		overflow: hidden;
 		background: linear-gradient(155deg, #0e1018 0%, #06070f 70%);
@@ -547,8 +558,9 @@
 		}
 
 		.selector {
-			flex: none;
+			flex: 0 0 auto;
 			width: 100%;
+			height: auto;
 			flex-direction: row;
 			overflow-x: auto;
 			overflow-y: hidden;
@@ -558,10 +570,12 @@
 
 		.sel-item {
 			flex: 0 0 140px;
+			min-height: 110px;
 		}
 
 		.sel-preview {
-			height: 64px;
+			flex: 1 1 auto;
+			min-height: 64px;
 		}
 
 		.page-desc {
@@ -570,6 +584,7 @@
 
 		.player {
 			border-radius: 12px;
+			min-height: 220px;
 		}
 	}
 </style>
