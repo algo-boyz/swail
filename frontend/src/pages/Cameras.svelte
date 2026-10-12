@@ -3,6 +3,7 @@
 	import { push } from 'svelte-spa-router';
 	import { GetCameras } from '../../bindings/swail/ajservice';
 	import type { MockCamera } from '../../bindings/swail/models';
+	import { _ } from '../lib/i18n';
 
 	const fallback: MockCamera[] = [
 		{ id: 'cam-front', label: 'Dash front', status: 'online', scene: 'roadway' },
@@ -49,35 +50,35 @@
 	<!-- Single-line Tesla-style command bar -->
 	<header class="cmd-bar">
 		<div class="cmd-left">
-			<button class="back-btn touch" onclick={() => push('/')} aria-label="Back">
+			<button class="back-btn touch" onclick={() => push('/')} aria-label={$_('common.back')}>
 				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 					<polyline points="15 18 9 12 15 6"></polyline>
 				</svg>
 			</button>
-			<h1 class="page-title"><span class="title-accent">Cameras</span></h1>
-			<span class="page-desc">Sources & live tiles</span>
+			<h1 class="page-title"><span class="title-accent">{$_('cameras.title')}</span></h1>
+			<span class="page-desc">{$_('cameras.desc')}</span>
 		</div>
 
 		<div class="cmd-stats" aria-live="polite">
 			<span class="stat" data-status="online">
 				<span class="stat-dot"></span>
-				{onlineCount} Online
+				{$_('cameras.online', { n: onlineCount })}
 			</span>
 			<span class="stat" data-status="degraded">
 				<span class="stat-dot"></span>
-				{degradedCount} Degraded
+				{$_('cameras.degraded', { n: degradedCount })}
 			</span>
 			<span class="stat" data-status="offline">
 				<span class="stat-dot"></span>
-				{offlineCount} Offline
+				{$_('cameras.offline', { n: offlineCount })}
 			</span>
 		</div>
 	</header>
 
 	{#if loading}
-		<p class="empty">Loading sources…</p>
+		<p class="empty">{$_('cameras.loading')}</p>
 	{:else if cameras.length === 0}
-		<p class="empty">No cameras registered.</p>
+		<p class="empty">{$_('cameras.empty')}</p>
 	{:else}
 		<div class="stage">
 			<!-- Vertical camera selector rail — equal-height slots fill the stage -->

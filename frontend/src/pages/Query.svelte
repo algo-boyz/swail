@@ -2,14 +2,15 @@
 	import { push } from 'svelte-spa-router';
 	import { Query as RunQuery, Health } from '../../bindings/swail/ajservice';
 	import type { QueryResultRow } from '../../bindings/swail/ajservice';
+	import { _ } from '../lib/i18n';
 
-	const tools = [
-		{ id: 'plates', label: 'Plates', hint: 'query_recent_plates · make_model, time_window' },
-		{ id: 'objects', label: 'Objects', hint: 'query_objects · class, track_id, camera' },
-		{ id: 'scenes', label: 'Scenes', hint: 'query_scenes · L1/L2, camera' },
-		{ id: 'transcripts', label: 'Transcripts', hint: 'query_transcripts · contains, window' },
-		{ id: 'detections', label: 'Detections', hint: 'query_detections · type, camera' }
-	];
+	const tools = $derived([
+		{ id: 'plates', label: $_('query.tool.plates'), hint: $_('query.hint.plates') },
+		{ id: 'objects', label: $_('query.tool.objects'), hint: $_('query.hint.objects') },
+		{ id: 'scenes', label: $_('query.tool.scenes'), hint: $_('query.hint.scenes') },
+		{ id: 'transcripts', label: $_('query.tool.transcripts'), hint: $_('query.hint.transcripts') },
+		{ id: 'detections', label: $_('query.tool.detections'), hint: $_('query.hint.detections') }
+	]);
 
 	let active = $state('plates');
 	let windowSec = $state(30);
@@ -19,19 +20,19 @@
 	let loading = $state(false);
 	let error = $state('');
 	let ran = $state(false);
-	let vqStatus = $state('checking…');
+	let vqStatus = $state('');
 
 	async function checkHealth() {
 		try {
 			const h = await Health();
 			const vq = h?.voice_query as Record<string, unknown> | undefined;
 			if (vq?.ok) {
-				vqStatus = vq.demo_mode ? 'voice-query · demo' : 'voice-query · live';
+				vqStatus = vq.demo_mode ? $_('query.status.demo') : $_('query.status.live');
 			} else {
-				vqStatus = 'voice-query offline';
+				vqStatus = $_('query.status.offline');
 			}
 		} catch {
-			vqStatus = 'bridge unavailable';
+			vqStatus = $_('query.status.bridge');
 		}
 	}
 
@@ -56,15 +57,20 @@
 		}
 	}
 
-	checkHealth();
+	$effect(() => {
+		// re-resolve status strings when locale changes
+		$_;
+		if (!vqStatus || vqStatus === '') vqStatus = $_('query.status.checking');
+		checkHealth();
+	});
 </script>
 
-<button class="back-btn" onclick={() => push('/')}>← Back</button>
+<button class="back-btn" onclick={() => push('/')}>{$_('common.back')}</button>
 
 <div class="page-header">
-	<h1 class="title"><span class="title-accent">Query</span></h1>
+	<h1 class="title"><span class="title-accent">{$_('query.title')}</span></h1>
 	<p class="subtitle">
-		Proxied to voice-query-service <code>/v1/query/*</code>
+		{$_('query.subtitle')} <code>/v1/query/*</code>
 		<span class="status-chip">{vqStatus}</span>
 	</p>
 </div>
@@ -90,19 +96,19 @@
 
 	<div class="form-row">
 		<label class="field">
-			<span class="control-label">Filter</span>
-			<input class="input" type="text" bind:value={filter} placeholder="make_model / class / phrase…" />
+			<span class="control-label">{$_('query.filter')}</span>
+			<input class="input" type="text" bind:value={filter} placeholder={$_('query.filter_placeholder')} />
 		</label>
 		<label class="field narrow">
-			<span class="control-label">Window (s)</span>
+			<span class="control-label">{$_('query.window')}</span>
 			<input class="input" type="number" bind:value={windowSec} min="5" max="3600" />
 		</label>
 		<label class="field narrow">
-			<span class="control-label">Limit</span>
+			<span class="control-label">{$_('query.limit')}</span>
 			<input class="input" type="number" bind:value={limit} min="1" max="50" />
 		</label>
 		<button class="btn" onclick={runQuery} disabled={loading}>
-			{loading ? '…' : 'Run'}
+			{loading ? '\u2026' : $_('common.run')}
 		</button>
 	</div>
 
@@ -112,7 +118,7 @@
 
 	<div class="results">
 		{#if loading}
-			<p class="empty">Loading…</p>
+			<p class="empty">{$_('query.loading')}</p>
 		{:else}
 			{#each results as r}
 				<div class="result-card">
@@ -125,16 +131,16 @@
 					<p class="result-meta">{r.meta}</p>
 					{#if r.object_id}
 						<button class="linkish" onclick={() => push(`/evidence/${r.object_id}`)}
-							>Play evidence →</button
+							>{$_('query.play_evidence')}</button
 						>
 					{/if}
 				</div>
 			{:else}
 				<p class="empty">
 					{#if ran && !error}
-						No hits in this window.
+						{$_('query.no_hits')}
 					{:else if !error}
-						Run a query against voice-query-service (DEMO_MODE=true works offline).
+						{$_('query.hint_run')}
 					{/if}
 				</p>
 			{/each}
