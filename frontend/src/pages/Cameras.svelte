@@ -39,13 +39,11 @@
 </script>
 
 <div class="cameras-page">
-	<button class="back-btn" onclick={() => push('/')}>← Back</button>
-
-	<!-- Command bar -->
+	<!-- Dense single-row command bar (Tesla-style) -->
 	<header class="cmd-bar">
 		<div class="cmd-left">
+			<button class="back-btn compact" onclick={() => push('/')} aria-label="Back">←</button>
 			<h1 class="page-title"><span class="title-accent">Cameras</span></h1>
-			<p class="page-sub">Sources registered with scene-gate / connector-camera</p>
 		</div>
 
 		<div class="cmd-stats" aria-live="polite">
@@ -103,44 +101,54 @@
 		width: 100%;
 	}
 
-	/* ----- Command bar ---------------------------------------------------- */
+	/* ----- Dense command bar ----------------------------------------------- */
 	.cmd-bar {
 		display: flex;
-		flex-wrap: wrap;
-		align-items: flex-end;
+		align-items: center;
 		justify-content: space-between;
-		gap: 0.75rem 1.5rem;
-		margin-bottom: 1.5rem;
+		gap: 0.75rem 1.25rem;
+		margin-bottom: 1rem;
+		min-height: 2.5rem;
+	}
+
+	.cmd-left {
+		display: flex;
+		align-items: center;
+		gap: 0.65rem;
+		min-width: 0;
+	}
+
+	.back-btn.compact {
+		margin: 0;
+		padding: 0.35rem 0.65rem;
+		font-size: 15px;
+		line-height: 1;
+		flex-shrink: 0;
 	}
 
 	.page-title {
-		margin: 0 0 0.25rem;
-		font-size: clamp(1.75rem, 4vw, 2.35rem);
-		line-height: 1.1;
+		margin: 0;
+		font-size: clamp(1.35rem, 2.8vw, 1.75rem);
+		line-height: 1.15;
 		font-weight: 800;
 		letter-spacing: -0.02em;
-	}
-
-	.page-sub {
-		margin: 0;
-		font-size: 0.95rem;
-		color: var(--muted);
-		max-width: 28rem;
+		white-space: nowrap;
 	}
 
 	.cmd-stats {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.5rem;
+		gap: 0.4rem;
+		flex-shrink: 0;
 	}
 
 	.stat {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.4rem;
-		padding: 0.35rem 0.75rem;
+		gap: 0.35rem;
+		padding: 0.3rem 0.65rem;
 		border-radius: 999px;
-		font-size: 12px;
+		font-size: 11.5px;
 		font-weight: 700;
 		letter-spacing: 0.02em;
 		background: var(--glass);
@@ -150,8 +158,8 @@
 	}
 
 	.stat-dot {
-		width: 7px;
-		height: 7px;
+		width: 6px;
+		height: 6px;
 		border-radius: 50%;
 		background: currentColor;
 	}
@@ -196,8 +204,8 @@
 	/* ----- Grid ------------------------------------------------------------ */
 	.cam-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-		gap: 1rem;
+		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+		gap: 0.85rem;
 		width: 100%;
 	}
 
@@ -250,7 +258,7 @@
 
 	.cam-preview {
 		position: relative;
-		height: 140px;
+		height: 128px;
 		background: linear-gradient(155deg, #141722 0%, #0a0b12 70%);
 		overflow: hidden;
 	}
@@ -337,20 +345,20 @@
 	}
 
 	.cam-meta {
-		padding: 12px 14px 14px;
+		padding: 10px 12px 12px;
 		display: flex;
 		flex-direction: column;
-		gap: 3px;
+		gap: 2px;
 	}
 
 	.cam-label {
-		font-size: 15px;
+		font-size: 14.5px;
 		font-weight: 700;
 		letter-spacing: -0.01em;
 	}
 
 	.scene {
-		font-size: 12.5px;
+		font-size: 12px;
 		color: var(--muted);
 		text-transform: capitalize;
 	}
@@ -358,22 +366,21 @@
 	.empty {
 		color: var(--muted);
 		font-size: 14px;
-		margin-top: 1rem;
+		margin-top: 0.75rem;
 	}
 
 	@media (max-width: 640px) {
 		.cam-grid {
-			grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-			gap: 0.75rem;
+			grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+			gap: 0.7rem;
 		}
 
 		.cam-preview {
-			height: 110px;
+			height: 100px;
 		}
 
 		.cmd-bar {
-			flex-direction: column;
-			align-items: flex-start;
+			flex-wrap: wrap;
 		}
 	}
 </style>
