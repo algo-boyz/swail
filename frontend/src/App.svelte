@@ -5,7 +5,7 @@
 	import Router from 'svelte-spa-router';
 	import { routes } from './lib/routes';
 
-	const wailsVersion = 'v3.0.0-beta.5';
+	const appVersion = 'scaffold-pr1';
 	let time: string = $state('Listening for Time event...');
 
 	onMount(() => {
@@ -20,19 +20,18 @@
 
 <main class="container">
 	<header class="brand">
-		<span class="brand-mark" data-wml-openURL="https://v3.wails.io">
-			<img src="/wails.png" class="brand-logo" alt="Wails logo" />
+		<span class="brand-mark" data-wml-openURL="https://www.agentjetson.ai">
+			<img src="/wails.png" class="brand-logo" alt="AgentJetson" />
 		</span>
 	</header>
 
-	<!-- Routed content -->
 	<Router {routes} />
 </main>
 
 <hr class="footer-divider" />
 
 <footer class="footer">
-	<span class="footer-version">{wailsVersion}</span>
+	<span class="footer-version">{appVersion}</span>
 
 	<span class="footer-time">
 		<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -43,9 +42,13 @@
 		<span>{time}</span>
 	</span>
 
-	<a class="footer-docs" href="https://v3.wails.io" data-wml-openURL="https://v3.wails.io"
-		aria-label="Wails documentation">
-		Docs
+	<a
+		class="footer-docs"
+		href="https://www.agentjetson.ai"
+		data-wml-openURL="https://www.agentjetson.ai"
+		aria-label="AgentJetson site"
+	>
+		agentjetson.ai
 		<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
 			stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 			<line x1="7" y1="17" x2="17" y2="7"></line>
