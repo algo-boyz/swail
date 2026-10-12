@@ -94,10 +94,10 @@ body {
 .container {
     flex: 1 0 auto;                     /* fill the space above the footer */
     width: 100%;
-    max-width: 540px;
+    max-width: 1120px;                  /* was 540 — Cameras/Alerts need room */
     display: flex;
     flex-direction: column;
-    justify-content: center;            /* vertically centre the content */
+    justify-content: flex-start;        /* top-align; Home still looks fine */
     align-items: flex-start;
     text-align: left;
 }
