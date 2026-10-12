@@ -7,9 +7,9 @@ export {
 };
 
 export type {
+    EvidenceMeta,
     MockAlert,
     MockCamera,
     QueryArgs,
-    QueryResultRow,
-    EvidenceMeta
+    QueryResultRow
 } from "./models.js";

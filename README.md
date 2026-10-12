@@ -55,8 +55,7 @@ Env: `VOICE_QUERY_URL`, `OBJECT_STORAGE_URL`.
 
 ## Roadmap
 
-1. ~~PR-1 — scaffold~~
-2. ~~PR-2 — voice-query client~~
-3. ~~PR-3/4 — object-storage presign + CORS (core)~~
-4. ~~PR-5 — Evidence player~~
-5. Live alerts / NATS / packaging
+1. Live alerts / NATS / packaging
+2. Terminal type console that slides in as transparant overlay (green text) displaying log messages in real-time
+3. Subtitle overlays of dialogue captured from a mic associated with a cam  
+
