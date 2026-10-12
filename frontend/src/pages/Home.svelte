@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { push } from 'svelte-spa-router';
 	import { _ } from '../lib/i18n';
+	import LangSwitcher from '../lib/LangSwitcher.svelte';
 
 	const cards = $derived([
 		{ path: '/query', title: $_('nav.query'), desc: $_('nav.query_desc') },
@@ -11,6 +12,13 @@
 </script>
 
 <div class="home">
+	<header class="top-bar">
+		<span class="brand-mark" data-wml-openURL="https://www.agentjetson.ai">
+			<img src="/wails.png" class="brand-logo" alt="AgentJetson" />
+		</span>
+		<LangSwitcher />
+	</header>
+
 	<span class="badge">{$_('home.badge')}</span>
 
 	<h1 class="title">
@@ -43,6 +51,20 @@
 	.home {
 		width: 100%;
 	}
+
+	.top-bar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+		margin-bottom: var(--s-2);
+		flex-shrink: 0;
+	}
+
+	.top-bar :global(.brand-logo) {
+		height: calc(var(--s-4) * 0.85);
+	}
+
 	.card-desc {
 		display: block;
 		font-size: 12.5px;
