@@ -8,31 +8,41 @@ import (
 // AJService is the Go ↔ frontend bridge for AgentJetson.
 type AJService struct{}
 
-// Health reports local + voice-query-service readiness.
+// Health reports local + voice-query + object-storage readiness.
 func (s *AJService) Health() map[string]any {
 	out := map[string]any{
 		"ok":      true,
 		"service": "swail",
-		"mode":    "pr2",
+		"mode":    "pr5",
 		"targets": map[string]string{
 			"voice_query":    voiceQueryBase(),
-			"object_storage": "http://localhost:8081",
+			"object_storage": objectStorageBase(),
 		},
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
+
 	h, err := pingVoiceQuery(ctx)
 	if err != nil {
 		out["voice_query"] = map[string]any{"ok": false, "error": err.Error()}
 		out["ok"] = false
-		return out
+	} else {
+		out["voice_query"] = map[string]any{
+			"ok":         true,
+			"status":     h.Status,
+			"demo_mode":  h.DemoMode,
+			"clickhouse": h.ClickHouse,
+			"version":    h.Version,
+		}
 	}
-	out["voice_query"] = map[string]any{
-		"ok":          true,
-		"status":      h.Status,
-		"demo_mode":   h.DemoMode,
-		"clickhouse":  h.ClickHouse,
-		"version":     h.Version,
+
+	ost, err := pingObjectStorage(ctx)
+	if err != nil {
+		out["object_storage"] = map[string]any{"ok": false, "error": err.Error()}
+		out["ok"] = false
+	} else {
+		ost["ok"] = true
+		out["object_storage"] = ost
 	}
 	return out
 }
@@ -75,6 +85,13 @@ func (s *AJService) Query(args QueryArgs) ([]QueryResultRow, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
 	defer cancel()
 	return queryVoice(ctx, tool, q)
+}
+
+// GetEvidence returns metadata + play URL for an object_id.
+func (s *AJService) GetEvidence(objectID string) (EvidenceMeta, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	return fetchEvidence(ctx, objectID, 3600)
 }
 
 // MockAlert is a single alert row for the UI scaffold.
