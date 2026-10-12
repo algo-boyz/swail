@@ -10,5 +10,6 @@ export type {
     MockAlert,
     MockCamera,
     QueryArgs,
-    QueryResultRow
+    QueryResultRow,
+    EvidenceMeta
 } from "./models.js";

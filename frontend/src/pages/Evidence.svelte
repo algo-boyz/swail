@@ -1,46 +1,118 @@
 <script lang="ts">
 	import { push } from 'svelte-spa-router';
+	import { GetEvidence } from '../../bindings/swail/ajservice';
+	import type { EvidenceMeta } from '../../bindings/swail/models';
 
-	// svelte-spa-router passes params via props
 	let { params }: { params?: { id?: string } } = $props();
-	const id = $derived(params?.id ?? 'unknown');
+	const id = $derived(params?.id ?? '');
 
-	// PR-5: fetch presigned URL from object-storage GET /v1/objects/{id}/presign
-	const mockMeta = {
-		kind: 'camera_recording',
-		source: 'cam-front',
-		contentType: 'video/mp4',
-		size: '2.4 MB',
-		ts: '2026-10-12 14:22:01 UTC'
-	};
+	let meta = $state<EvidenceMeta | null>(null);
+	let loading = $state(true);
+	let error = $state('');
+
+	async function load(objectId: string) {
+		if (!objectId || objectId === 'unknown' || objectId === 'demo') {
+			loading = false;
+			error = objectId === 'demo'
+				? 'Replace /evidence/demo with a real object_id from object-storage.'
+				: 'Missing object_id in route.';
+			meta = null;
+			return;
+		}
+		loading = true;
+		error = '';
+		try {
+			meta = await GetEvidence(objectId);
+		} catch (e: any) {
+			error = e?.message ?? String(e);
+			meta = null;
+		} finally {
+			loading = false;
+		}
+	}
+
+	$effect(() => {
+		load(id);
+	});
+
+	function isVideo(ct: string) {
+		return ct.startsWith('video/') || ct.includes('mp4') || ct.includes('webm');
+	}
+	function isAudio(ct: string) {
+		return ct.startsWith('audio/') || ct.includes('wav') || ct.includes('ogg') || ct.includes('mpeg');
+	}
+	function isImage(ct: string) {
+		return ct.startsWith('image/') || ct.includes('jpeg') || ct.includes('png') || ct.includes('jpg');
+	}
+	function formatBytes(n: number) {
+		if (!n) return '—';
+		if (n < 1024) return `${n} B`;
+		if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+		return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+	}
 </script>
 
 <button class="back-btn" onclick={() => push('/')}>← Back</button>
 
 <div class="page-header">
 	<h1 class="title"><span class="title-accent">Evidence</span></h1>
-	<p class="subtitle">object_id <code>{id}</code> · will stream via presigned URL (PR-5).</p>
+	<p class="subtitle">
+		object_id <code>{id || '—'}</code>
+		{#if meta}
+			<span class="mode-chip" data-mode={meta.mode}>{meta.mode}</span>
+		{/if}
+	</p>
 </div>
 
 <div class="player-shell">
-	<div class="player-placeholder" role="img" aria-label="Video placeholder">
-		<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48">
-			<polygon points="5 3 19 12 5 21 5 3"></polygon>
-		</svg>
-		<span>Presigned media will appear here</span>
-	</div>
+	{#if loading}
+		<div class="player-placeholder"><span>Loading…</span></div>
+	{:else if error}
+		<div class="player-placeholder err-box">
+			<span>{error}</span>
+			<p class="hint">
+				Ensure object-storage is up (<code>DEMO_MODE=true go run ./cmd/server</code> on :8081)
+				and the id exists. Put a sample with
+				<code>POST /v1/objects?kind=camera_recording&source=cam-front</code>.
+			</p>
+		</div>
+	{:else if meta}
+		{#if isVideo(meta.content_type)}
+			<!-- svelte-ignore a11y_media_has_caption -->
+			<video class="player" controls preload="metadata" src={meta.play_url}>
+				Your browser does not support video playback.
+			</video>
+		{:else if isAudio(meta.content_type)}
+			<audio class="player audio" controls preload="metadata" src={meta.play_url}>
+				Your browser does not support audio playback.
+			</audio>
+		{:else if isImage(meta.content_type)}
+			<img class="player img" src={meta.play_url} alt="Evidence {meta.object_id}" />
+		{:else}
+			<div class="player-placeholder">
+				<span>Unsupported type: {meta.content_type || 'unknown'}</span>
+				<a class="dl" href={meta.play_url} target="_blank" rel="noopener">Open / download</a>
+			</div>
+		{/if}
 
-	<dl class="meta">
-		<div><dt>Kind</dt><dd>{mockMeta.kind}</dd></div>
-		<div><dt>Source</dt><dd>{mockMeta.source}</dd></div>
-		<div><dt>Type</dt><dd>{mockMeta.contentType}</dd></div>
-		<div><dt>Size</dt><dd>{mockMeta.size}</dd></div>
-		<div><dt>Captured</dt><dd>{mockMeta.ts}</dd></div>
-	</dl>
+		<dl class="meta">
+			<div><dt>Kind</dt><dd>{meta.kind || '—'}</dd></div>
+			<div><dt>Source</dt><dd>{meta.source || '—'}</dd></div>
+			<div><dt>Type</dt><dd>{meta.content_type || '—'}</dd></div>
+			<div><dt>Size</dt><dd>{formatBytes(meta.size_bytes)}</dd></div>
+			<div><dt>Captured</dt><dd>{meta.timestamp || '—'}</dd></div>
+			<div><dt>Expires</dt><dd>{meta.expires_at || '—'}</dd></div>
+		</dl>
 
-	<p class="note">
-		Requires object-storage <code>GET /v1/objects/&#123;id&#125;/presign</code> + CORS (core PR-3).
-	</p>
+		<p class="note">
+			Playback via <strong>{meta.mode}</strong>
+			{#if meta.mode === 'presign'}
+				(direct to object store — best for seeking).
+			{:else}
+				(Go proxy with Range support — used when presign is unavailable, e.g. filesystem DEMO).
+			{/if}
+		</p>
+	{/if}
 </div>
 
 <style>
@@ -60,6 +132,57 @@
 		gap: 12px;
 		color: var(--muted);
 		font-size: 13px;
+		padding: 16px;
+		text-align: center;
+	}
+	.err-box {
+		color: #f87171;
+	}
+	.hint {
+		font-size: 12px;
+		color: var(--muted);
+		line-height: 1.45;
+		max-width: 420px;
+		margin: 0;
+	}
+	.player {
+		width: 100%;
+		border-radius: var(--radius);
+		border: 1px solid var(--glass-border);
+		background: #000;
+		--wails-draggable: no-drag;
+	}
+	.player.audio {
+		min-height: 48px;
+		padding: 12px;
+		background: var(--glass);
+	}
+	.player.img {
+		display: block;
+		max-height: 420px;
+		object-fit: contain;
+		background: #0a0b12;
+	}
+	.mode-chip {
+		margin-left: 8px;
+		font-size: 10px;
+		font-weight: 800;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		padding: 2px 8px;
+		border-radius: 999px;
+		border: 1px solid var(--glass-border);
+		color: var(--muted);
+	}
+	.mode-chip[data-mode='presign'] {
+		color: #4ade80;
+		border-color: rgba(74, 222, 128, 0.4);
+		background: rgba(74, 222, 128, 0.12);
+	}
+	.mode-chip[data-mode='proxy'] {
+		color: #facc15;
+		border-color: rgba(250, 204, 21, 0.35);
+		background: rgba(250, 204, 21, 0.1);
 	}
 	.meta {
 		display: grid;
@@ -85,11 +208,16 @@
 		margin: 0;
 		font-size: 13.5px;
 		font-weight: 600;
+		word-break: break-all;
 	}
 	.note {
 		font-size: 12.5px;
 		color: var(--muted);
 		line-height: 1.5;
+	}
+	.dl {
+		color: #ff7a8f;
+		font-weight: 600;
 	}
 	code {
 		font-size: 0.92em;
