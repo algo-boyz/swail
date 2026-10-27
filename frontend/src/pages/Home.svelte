@@ -7,7 +7,8 @@
 		{ path: '/query', title: $_('nav.query'), desc: $_('nav.query_desc') },
 		{ path: '/cameras', title: $_('nav.cameras'), desc: $_('nav.cameras_desc') },
 		{ path: '/alerts', title: $_('nav.alerts'), desc: $_('nav.alerts_desc') },
-		{ path: '/evidence/demo', title: $_('nav.evidence'), desc: $_('nav.evidence_desc') }
+		{ path: '/evidence/demo', title: $_('nav.evidence'), desc: $_('nav.evidence_desc') },
+		{ path: '/map', title: $_('nav.map'), desc: $_('nav.map_desc') }
 	]);
 </script>
 

@@ -7,6 +7,8 @@
   "nav.alerts_desc": "Recent detections & intents",
   "nav.evidence": "Evidence",
   "nav.evidence_desc": "Presigned audio / video player",
+  "nav.map": "Globe",
+  "nav.map_desc": "God's Eye View · live 3D spatial intelligence",
 
   "home.badge": "scaffold \u00b7 PR-1",
   "home.subtitle": "Intelligence at the edge of every encounter \u2014 voice query, evidence & awareness.",
@@ -74,6 +76,16 @@
   "evidence.no_video": "Your browser does not support video playback.",
   "evidence.no_audio": "Your browser does not support audio playback.",
   "evidence.hint": "Ensure object-storage is up (DEMO_MODE=true go run ./cmd/server on :8081) and the id exists. Put a sample with POST /v1/objects?kind=camera_recording&source=cam-front.",
+
+  "map.title": "Globe",
+  "map.subtitle": "God's Eye View embedded · live open-source spatial intelligence",
+  "map.settings": "Settings",
+  "map.hide_settings": "Hide",
+  "map.open_browser": "Open in browser",
+  "map.gev_url": "GEV base URL",
+  "map.apply": "Apply",
+  "map.hint": "Run God's Eye View locally (npm run dev \u2192 http://localhost:4173). For iframe embedding set GEV_EMBED_FRAME_ANCESTORS to allow this origin (or * for local). Persist URL in localStorage; override with #/map?gev=http://host:port.",
+  "map.unavailable": "Could not load the embedded globe. Is God's Eye View running, and is framing allowed?",
 
   "lang.label": "Language"
 }
